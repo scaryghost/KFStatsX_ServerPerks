@@ -1,0 +1,20 @@
++Author
+Scary Ghost
+
++About
+Enables compatibility between ServerPerksV5 and KFStatsX
+
++Install
+Copy the .u file into your system folder.  Append the following text to 'compatibleControllers' in the KFStatsX.ini file:
+;KFStatsX_ServerPerksV5.KFSXPlayerController_V5ServerPerks;ServerPerks V5.5
+
++Usage
+Select the ServerPerks and KFStatsX mutators as normal.  In the mutator configuration window, check the
+advanded options box and a "Compatiblity" selection box will appear. Switch it to "ServerPerks V5.5". IF
+you are using the web admin page, the "Compatability" box will automatically be there. 
+
++Download
+https://dl.dropbox.com/u/16251678/KFStatsX_ServerPerksV5_v1.0.zip
+
++MD5 Hash
+KFStatsX_ServerPerksV5.u    055f394fbf022288aefcb1d5a410c69c 
