@@ -5,8 +5,8 @@ Scary Ghost
 Enables compatibility between ServerPerksV5 and KFStatsX
 
 +Install
-Copy the .u file into your system folder.  Append the following text to 'compatibleControllers' in the KFStatsX.ini file:
-;KFStatsX_ServerPerksV5.KFSXPlayerController_V5ServerPerks;ServerPerks V5.5
+Copy the .u file into your system folder.  Add the following line in the KFStatsX.ini file:
+compatibleControllers=KFStatsX_ServerPerksV5.KFSXPlayerController_V5ServerPerks;Server Perks v5.5
 
 +Usage
 Select the ServerPerks and KFStatsX mutators as normal.  In the mutator configuration window, check the
@@ -17,4 +17,4 @@ you are using the web admin page, the "Compatability" box will automatically be 
 https://dl.dropbox.com/u/16251678/KFStatsX_ServerPerksV5_v1.0.zip
 
 +MD5 Hash
-KFStatsX_ServerPerksV5.u    055f394fbf022288aefcb1d5a410c69c 
+KFStatsX_ServerPerksV5.u    f284702fa9667a04f7f8f7bd9c4b0ba0 
