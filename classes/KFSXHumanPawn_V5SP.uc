@@ -4,7 +4,7 @@
  * updated if that class changes.
  * @author etsai (Scary Ghost)
  */
-class KFSXHumanPawn_V5ServerPerks extends SRHumanPawn;
+class KFSXHumanPawn_V5SP extends SRHumanPawn;
 
 var String damageTaken, armorLost, timeAlive, healedSelf, cashSpent, receivedHeal;
 var String deaths;
