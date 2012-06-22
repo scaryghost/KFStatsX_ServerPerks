@@ -6,7 +6,7 @@ Enables compatibility between ServerPerksV5 and KFStatsX
 
 +Install
 Copy the .u file into your system folder.  Add the following line in the KFStatsX.ini file:
-compatibleControllers=KFStatsX_ServerPerksV5.KFSXPlayerController_V5ServerPerks;Server Perks v5.5
+compatibleControllers=KFStatsX_ServerPerksV5.KFSXPlayerController_V5SP;Server Perks v5.5
 
 +Usage
 Select the ServerPerks and KFStatsX mutators as normal.  In the mutator configuration window, check the
@@ -17,4 +17,4 @@ you are using the web admin page, the "Compatability" box will automatically be 
 https://dl.dropbox.com/u/16251678/KFStatsX_ServerPerksV5_v1.0.zip
 
 +MD5 Hash
-KFStatsX_ServerPerksV5.u    a323a9e63fdf9beebe7bd9605941c186 
+KFStatsX_ServerPerksV5.u    4963e214fd902f0e45d691ab95c81a0e 
