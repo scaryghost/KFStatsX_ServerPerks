@@ -10,11 +10,11 @@ compatibleControllers=KFStatsX_ServerPerksV5.KFSXPlayerController_V5SP;Server Pe
 
 +Usage
 Select the ServerPerks and KFStatsX mutators as normal.  In the mutator configuration window, check the
-advanded options box and a "Compatiblity" selection box will appear. Switch it to "ServerPerks V5.5". IF
-you are using the web admin page, the "Compatability" box will automatically be there. 
+advanded options box and a "Compatiblity" selection box will appear. Switch it to "ServerPerks V5.5". If
+you are using the web admin page, the "Compatability" box will automatically be there.  Alternatively, you 
+can change the "PlayerController" directly in the ini to be:
+
+    PlayerController=KFStatsX_ServerPerksV5.KFSXPlayerController_V5SP
 
 +Download
 https://dl.dropbox.com/u/16251678/KFStatsX_ServerPerksV5_v1.0.zip
-
-+MD5 Hash
-KFStatsX_ServerPerksV5.u    4963e214fd902f0e45d691ab95c81a0e 
