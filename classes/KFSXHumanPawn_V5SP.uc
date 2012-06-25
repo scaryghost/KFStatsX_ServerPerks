@@ -6,36 +6,63 @@
  */
 class KFSXHumanPawn_V5SP extends SRHumanPawn;
 
-var String damageTaken, armorLost, timeAlive, healedSelf, cashSpent, receivedHeal;
-var String deaths;
+var string damageTaken, armorLost, timeAlive, cashSpent;
+var string healedSelf, receivedHeal, boltsRetrieved, healDartsConnected, healedTeammates;
+var string deaths;
 var float prevHealth, prevShield;
-var KFSXLinkedReplicationInfo lri;
+var KFSXReplicationInfo kfsxri;
 var int prevTime;
+
+/**
+ * If the Pawn touched a healing dart, tell the dart's instigator 
+ * to increment heal darts connected
+ */
+function Touch(Actor Other) {
+    local KFSXReplicationInfo instigatorRI;
+
+    super.Touch(Other);
+    if (isHealingProjectile(Other) && KFSXHumanPawn(Other.Instigator) != Self) {
+        instigatorRI= class'KFSXReplicationInfo'.static.findKFSXri(Other.Instigator.PlayerReplicationInfo);
+        instigatorRI.actions.accum(healDartsConnected, 1);
+        if (Health < HealthMax)
+            instigatorRI.actions.accum(healedTeammates, 1);
+    }
+}
+
+function bool isHealingProjectile(Actor Other) {
+    return MP7MHealinglProjectile(Other) != none;
+}
+
+simulated function PostBeginPlay() {
+    super.PostBeginPlay();
+    prevTime= Level.GRI.ElapsedTime;
+}
 
 /**
  * Accumulate Time_Alive and perk time
  */
 function Timer() {
-    local int timeDiff;
+    local int currTime, timeDiff;
 
     super.Timer();
-    timeDiff= Level.GRI.ElapsedTime - prevTime;
-    if (lri != none) {
-        lri.player.accum(timeAlive, timeDiff);
+    currTime= Level.GRI.ElapsedTime;
+    timeDiff= currTime - prevTime;
+    if (kfsxri != none) {
+        kfsxri.player.accum(timeAlive, timeDiff);
+        if (KFPlayerReplicationInfo(PlayerReplicationInfo).ClientVeteranSkill != none) {
+            kfsxri.perks.accum(GetItemName(string(KFPlayerReplicationInfo(PlayerReplicationInfo).ClientVeteranSkill)), timeDiff);
+        }
     }
-    if (lri != none && KFPlayerReplicationInfo(PlayerReplicationInfo).ClientVeteranSkill != none) {
-        lri.perks.accum(GetItemName(string(KFPlayerReplicationInfo(PlayerReplicationInfo).ClientVeteranSkill)), timeDiff);
-    }
-    prevTime= Level.GRI.ElapsedTime;
+    prevTime= currTime;
 }
 
 /**
  * Pawn possessed by a controller.
- * Overridden to grab the player and hidden LRIs
+ * Overridden to grab the stat info
  */
 function PossessedBy(Controller C) {
     super.PossessedBy(C);
-    lri= class'KFSXLinkedReplicationInfo'.static.findKFSXlri(PlayerReplicationInfo);
+    kfsxri= class'KFSXReplicationInfo'.static.findKFSXri(PlayerReplicationInfo);
 }
 
 function bool isMedicGun() {
@@ -61,8 +88,8 @@ function DeactivateSpawnProtection() {
             if (mode ==1)
                 itemName= healedSelf;
             else
-                itemName= lri.healedTeammates;
-            lri.actions.accum(itemName,1);
+                itemName= healedTeammates;
+            kfsxri.actions.accum(itemName,1);
             return;
         }
 
@@ -77,7 +104,7 @@ function DeactivateSpawnProtection() {
             itemName$= " Alt";
         }
 
-        lri.weapons.accum(itemName, load);
+        kfsxri.weapons.accum(itemName, load);
     }
 }
 
@@ -93,8 +120,8 @@ simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation
 
     Super.TakeDamage(Damage,instigatedBy,hitlocation,momentum,damageType);
    
-    lri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
-    lri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
+    kfsxri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
+    kfsxri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
     prevHealth= 0;
     prevShield= 0;
 }
@@ -116,15 +143,15 @@ function TakeBileDamage() {
     Super(xPawn).TakeDamage(2+Rand(3), BileInstigator, Location, vect(0,0,0), class'DamTypeVomit');
     healthtoGive-=5;
 
-    if(lri != none) {
-        lri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
-        lri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
+    if(kfsxri != none) {
+        kfsxri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
+        kfsxri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
     }
 }
 
 function Died(Controller Killer, class<DamageType> damageType, vector HitLocation) {
     if (!Controller.IsInState('GameEnded')) {
-        lri.player.accum(deaths, 1);
+        kfsxri.player.accum(deaths, 1);
     }
 
     prevHealth= 0;
@@ -138,7 +165,7 @@ function ServerBuyWeapon( Class<Weapon> WClass ) {
 
     oldScore= PlayerReplicationInfo.Score;
     super.ServerBuyWeapon(WClass);
-    lri.player.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
+    kfsxri.player.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
 }
 
 function ServerBuyAmmo( Class<Ammunition> AClass, bool bOnlyClip ) {
@@ -146,7 +173,7 @@ function ServerBuyAmmo( Class<Ammunition> AClass, bool bOnlyClip ) {
 
     oldScore= PlayerReplicationInfo.Score;
     super.ServerBuyAmmo(AClass, bOnlyClip);
-    lri.player.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
+    kfsxri.player.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
 }
 
 function ServerBuyKevlar() {
@@ -154,7 +181,7 @@ function ServerBuyKevlar() {
 
     oldScore= PlayerReplicationInfo.Score;
     super.ServerBuyKevlar();
-    lri.player.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
+    kfsxri.player.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
 }
 
 function bool GiveHealth(int HealAmount, int HealMax) {
@@ -162,7 +189,7 @@ function bool GiveHealth(int HealAmount, int HealMax) {
 
     result= super.GiveHealth(HealAmount, HealMax);
     if (result) {
-        lri.actions.accum(receivedHeal, 1);
+        kfsxri.actions.accum(receivedHeal, 1);
     }
     return result;
 }
@@ -175,4 +202,7 @@ defaultproperties {
     cashSpent= "Cash Spent"
     receivedHeal= "Received Heal"
     deaths= "Deaths"
+    boltsRetrieved= "Bolts Retrieved"
+    healDartsConnected= "Heal Darts Connected"
+    healedTeammates= "Healed Teammates"
 }
