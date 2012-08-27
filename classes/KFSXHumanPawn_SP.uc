@@ -4,12 +4,10 @@
  * updated if that class changes.
  * @author etsai (Scary Ghost)
  */
-class KFSXHumanPawn_V5SP extends SRHumanPawn;
+class KFSXHumanPawn_SP extends SRHumanPawn;
 
 var string damageTaken, armorLost, timeAlive, cashSpent;
 var string healedSelf, receivedHeal, boltsRetrieved, healDartsConnected, healedTeammates;
-var string deaths;
-var float prevHealth, prevShield;
 var KFSXReplicationInfo kfsxri;
 var int prevTime;
 
@@ -30,7 +28,7 @@ function Touch(Actor Other) {
 }
 
 function bool isHealingProjectile(Actor Other) {
-    return MP7MHealinglProjectile(Other) != none;
+    return MP7MHealinglProjectile(Other) != none || M7A3MHealinglProjectile(OtheR) != none;
 }
 
 simulated function PostBeginPlay() {
@@ -66,7 +64,7 @@ function PossessedBy(Controller C) {
 }
 
 function bool isMedicGun() {
-    return MP7MMedicGun(Weapon) != none;
+    return MP7MMedicGun(Weapon) != none || M7A3MMedicGun(Weapon) != none;
 }
 
 /**
@@ -114,16 +112,14 @@ simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation
     local float oldShield;
 
     oldHealth= Health;
-    prevHealth= oldHealth;
     oldShield= ShieldStrength;
-    prevShield= oldShield;
 
     Super.TakeDamage(Damage,instigatedBy,hitlocation,momentum,damageType);
    
-    kfsxri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
-    kfsxri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
-    prevHealth= 0;
-    prevShield= 0;
+    if (kfsxri != none && oldHealth > 0) {
+        kfsxri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
+        kfsxri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
+    }
 }
 
 /**
@@ -136,28 +132,15 @@ function TakeBileDamage() {
     local float oldShield;
 
     oldHealth= Health;
-    prevHealth= oldHealth;
     oldShield= ShieldStrength;
-    prevShield= oldShield;
 
     Super(xPawn).TakeDamage(2+Rand(3), BileInstigator, Location, vect(0,0,0), class'DamTypeVomit');
     healthtoGive-=5;
 
-    if(kfsxri != none) {
+    if(kfsxri != none && oldHealth > 0) {
         kfsxri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
         kfsxri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
     }
-}
-
-function Died(Controller Killer, class<DamageType> damageType, vector HitLocation) {
-    if (!Controller.IsInState('GameEnded')) {
-        kfsxri.player.accum(deaths, 1);
-    }
-
-    prevHealth= 0;
-    prevShield= 0;
-
-    super.Died(Killer, damageType, HitLocation);
 }
 
 function ServerBuyWeapon( Class<Weapon> WClass ) {
@@ -185,13 +168,11 @@ function ServerBuyKevlar() {
 }
 
 function bool GiveHealth(int HealAmount, int HealMax) {
-    local bool result;
-
-    result= super.GiveHealth(HealAmount, HealMax);
-    if (result) {
+    if (super.GiveHealth(HealAmount, HealMax)) {
         kfsxri.actions.accum(receivedHeal, 1);
+        return true;
     }
-    return result;
+    return false;
 }
 
 defaultproperties {
@@ -201,7 +182,6 @@ defaultproperties {
     healedSelf= "Healed Self"
     cashSpent= "Cash Spent"
     receivedHeal= "Received Heal"
-    deaths= "Deaths"
     boltsRetrieved= "Bolts Retrieved"
     healDartsConnected= "Heal Darts Connected"
     healedTeammates= "Healed Teammates"

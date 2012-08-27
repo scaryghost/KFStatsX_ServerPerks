@@ -3,7 +3,7 @@
  * ServerPerks v5.5 and KFStatsX
  * @author etsai (Scary Ghost)
  */
-class KFSXPlayerController_V5SP extends KFPCServ;
+class KFSXPlayerController_SP extends KFPCServ;
 
 /**
  * Custom console command to bring up the stats menu
@@ -13,5 +13,5 @@ exec function InGameStats() {
 }
 
 defaultproperties {
-    PawnClass=Class'KFSXHumanPawn_V5SP'
+    PawnClass=Class'KFSXHumanPawn_SP'
 }
