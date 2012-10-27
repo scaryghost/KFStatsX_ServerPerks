@@ -1,6 +1,6 @@
 /**
  * Custom controller providing compatibility between 
- * ServerPerks v5.5 and KFStatsX
+ * ServerPerks v6.0 and KFStatsX
  * @author etsai (Scary Ghost)
  */
 class KFSXPlayerController_SP extends KFPCServ;

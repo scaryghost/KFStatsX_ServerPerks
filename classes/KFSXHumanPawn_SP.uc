@@ -1,13 +1,13 @@
 /**
- * Custom human pawn providing compatibility between ServerPerks V5.5 
+ * Custom human pawn providing compatibility between ServerPerks V6.0 
  * and KFStatsX.  The code is copied  from KFSXHumanPawn and must be 
  * updated if that class changes.
  * @author etsai (Scary Ghost)
  */
 class KFSXHumanPawn_SP extends SRHumanPawn;
 
-var string damageTaken, armorLost, timeAlive, cashSpent;
-var string healedSelf, receivedHeal, boltsRetrieved, healDartsConnected, healedTeammates;
+var string damageTaken, armorLost, timeAlive, cashSpent, shotByHusk;
+var string healedSelf, receivedHeal, healDartsConnected, healedTeammates;
 var KFSXReplicationInfo kfsxri;
 var int prevTime;
 
@@ -120,6 +120,10 @@ simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation
         kfsxri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
         kfsxri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
     }
+    //Does not work on TestMap
+    if (ZombieHusk(InstigatedBy) != none && Momentum != vect(0,0,0) && damageType == class'HuskFireProjectile'.default.MyDamageType) {
+        kfsxri.actions.accum(shotByHusk, 1);
+    }
 }
 
 /**
@@ -182,7 +186,7 @@ defaultproperties {
     healedSelf= "Healed Self"
     cashSpent= "Cash Spent"
     receivedHeal= "Received Heal"
-    boltsRetrieved= "Bolts Retrieved"
     healDartsConnected= "Heal Darts Connected"
     healedTeammates= "Healed Teammates"
+    shotByHusk= "Shot By Husk"
 }

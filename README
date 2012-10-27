@@ -2,7 +2,7 @@
 Scary Ghost
 
 +About
-Enables compatibility between ServerPerksV5 and KFStatsX
+Enables compatibility between ServerPerksV6 and KFStatsX
 
 +Install
 Copy the .u file into your system folder.  Add the following line in the KFStatsX.ini file:
