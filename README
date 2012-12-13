@@ -15,6 +15,3 @@ you are using the web admin page, the "Compatability" box will automatically be 
 can change the "PlayerController" directly in the ini to be:
 
     PlayerController=KFStatsX_ServerPerks.KFSXPlayerController_SP
-
-+Download
-https://dl.dropbox.com/u/16251678/KFStatsX_ServerPerks_v1.0.zip
