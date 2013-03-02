@@ -8,9 +8,14 @@ class KFSXPlayerController_SP extends KFPCServ;
 var bool addedInteraction;
 var string interactionName;
 
-function EnterStartState() {
-    Super.EnterStartState();
-    if (!addedInteraction && Viewport(Player) != None) {
+function SetPawnClass(string inClass, string inCharacter) {
+    super.SetPawnClass(inClass, inCharacter);
+    PawnClass= Class'KFSXHumanPawn';
+}
+
+simulated event PlayerTick(float DeltaTime) {
+    super.PlayerTick(DeltaTime);
+    if (Role < ROLE_Authority && !addedInteraction && Viewport(Player) != None) {
         Player.InteractionMaster.AddInteraction(interactionName, Player);
         addedInteraction= true;
     }
