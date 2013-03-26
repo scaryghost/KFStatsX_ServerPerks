@@ -6,16 +6,19 @@
  */
 class KFSXHumanPawn_SP extends SRHumanPawn;
 
+var bool signalToss, signalFire;
 var string damageTaken, armorLost, timeAlive, cashSpent, shotByHusk;
 var string healedSelf, receivedHeal, healDartsConnected, healedTeammates;
+var string boltsRetrieved, bladesRetrieved;
 var KFSXReplicationInfo kfsxri;
-var int prevTime;
+var int prevTime, prevHuskgunAmmo;
 
 /**
  * If the Pawn touched a healing dart, tell the dart's instigator 
  * to increment heal darts connected
  */
 function Touch(Actor Other) {
+    local Inventory inv;
     local KFSXReplicationInfo instigatorRI;
 
     super.Touch(Other);
@@ -24,6 +27,17 @@ function Touch(Actor Other) {
         instigatorRI.actions.accum(healDartsConnected, 1);
         if (Health < HealthMax)
             instigatorRI.actions.accum(healedTeammates, 1);
+    }
+    if (Other.IsInState('OnWall') && (CrossbowArrow(Other) != none || CrossbuzzsawBlade(Other) != none)) {
+        for (inv= Inventory; inv != None; inv= inv.Inventory) {
+            if (Weapon(inv).AmmoAmount(0) < Weapon(inv).MaxAmmo(0)) {
+                if (Crossbow(Inv) != None) {
+                    kfsxri.actions.accum(boltsRetrieved, 1.0);
+                } else if (Crossbuzzsaw(inv) != None) {
+                    kfsxri.actions.accum(bladesRetrieved, 1.0);
+                }
+            }
+    }
     }
 }
 
@@ -34,6 +48,38 @@ function bool isHealingProjectile(Actor Other) {
 simulated function PostBeginPlay() {
     super.PostBeginPlay();
     prevTime= Level.GRI.ElapsedTime;
+}
+
+simulated function Tick(float DeltaTime) {
+    local KFPlayerReplicationInfo kfPRI;
+    local class<Projectile> nadeType;
+
+    if (Role == ROLE_Authority) {
+        if (!signalToss && bThrowingNade) {
+            kfPRI= KFPlayerReplicationInfo(PlayerReplicationInfo);
+            if (kfPRI != none && kfPRI.ClientVeteranSkill != none) {
+                nadeType= kfPRI.ClientVeteranSkill.Static.GetNadeType(kfPRI);
+            } else {
+                nadeType= class'Nade';
+            }
+            kfsxri.weapons.accum(GetItemName(string(nadeType)), 1);
+            signalToss= true;
+        } else if (signalToss && !bThrowingNade) {
+            signalToss= false;
+        }
+        if (signalFire && Huskgun(Weapon) != none && prevHuskgunAmmo < Weapon.AmmoAmount(0)) {
+            prevHuskgunAmmo= Weapon.AmmoAmount(0);
+        }
+        if (!signalFire && Weapon.IsFiring()) {
+            if (Huskgun(Weapon) != none) {
+                prevHuskgunAmmo= Weapon.AmmoAmount(0);
+            }
+            signalFire= true;
+        } else if (signalFire && !Weapon.IsFiring()) {
+            signalFire= false;
+        }
+    }
+    super.Tick(DeltaTime);
 }
 
 /**
@@ -77,7 +123,11 @@ function DeactivateSpawnProtection() {
     local float load;
     super.DeactivateSpawnProtection();
     
-    if (Weapon.isFiring() && Welder(Weapon) == none && Huskgun(Weapon) == none) {
+    if (prevHuskgunAmmo != 0 && Huskgun(Weapon) != none) {
+        load= prevHuskgunAmmo - Weapon.AmmoAmount(0);
+        prevHuskgunAmmo= 0;
+    }
+    if (load != 0 || (Weapon.isFiring() && Welder(Weapon) == none)) {
         itemName= Weapon.ItemName;
         if (Weapon.GetFireMode(1).bIsFiring)
             mode= 1;
@@ -93,7 +143,7 @@ function DeactivateSpawnProtection() {
 
         if (KFMeleeGun(Weapon) != none || (mode == 1 && (isMedicGun() || ZEDGun(Weapon) != none))) {
             load= 1;
-        } else {
+        } else if (load == 0) {
             load= Weapon.GetFireMode(mode).Load;
         }
 
@@ -188,4 +238,6 @@ defaultproperties {
     healDartsConnected= "Heal Darts Connected"
     healedTeammates= "Healed Teammates"
     shotByHusk= "Shot By Husk"
+    boltsRetrieved= "Bolts Retrieved"
+    bladesRetrieved= "Blades Retrieved"
 }
