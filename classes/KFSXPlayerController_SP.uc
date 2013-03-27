@@ -16,13 +16,6 @@ simulated event PlayerTick(float DeltaTime) {
     }
 }
 
-/**
- * Custom console command to bring up the stats menu
- */
-exec function InGameStats() {
-    ClientOpenMenu("KFStatsX.StatsMenu");
-}
-
 defaultproperties {
     PawnClass=Class'KFSXHumanPawn_SP'
     interactionName= "KFStatsX.KFSXInteraction"
