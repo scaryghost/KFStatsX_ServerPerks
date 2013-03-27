@@ -14,7 +14,7 @@ Copy the .u file into your system folder.  Add the following line in the KFStats
 ## Usage 
 Select the ServerPerks and KFStatsX mutators as normal.  In the mutator configuration window, check the advanced options 
 box and a "Compatiblity" selection box will appear in the KStatsX section. Switch it to "ServerPerks V6.0". If you are 
-using the web admin page, the "Compatability" box will automatically be there.  Alternatively, you can change the 
+using the web admin page, the "Compatibility" box will automatically be there.  Alternatively, you can change the 
 "PlayerController" directly in the ini to be:
 
     PlayerController=KFStatsX_ServerPerks.KFSXPlayerController_SP
