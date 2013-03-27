@@ -9,6 +9,7 @@ Enables compatibility between ServerPerksV6 and KFStatsX
 
 ## Install 
 Copy the .u file into your system folder.  Add the following line in the KFStatsX.ini file:
+
     compatibleControllers=KFStatsX_ServerPerks.KFSXPlayerController_SP;Server Perks v6.0
 
 ## Usage 
