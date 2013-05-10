@@ -9,7 +9,7 @@ class KFSXHumanPawn_SP extends SRHumanPawn;
 var bool signalToss, signalFire;
 var string damageTaken, armorLost, timeAlive, cashSpent, shotByHusk;
 var string healedSelf, receivedHeal, healDartsConnected, healedTeammates;
-var string boltsRetrieved, bladesRetrieved;
+var string boltsRetrieved, bladesRetrieved, grabbedByClot, pukedOn;
 var KFSXReplicationInfo kfsxri;
 var int prevTime, prevHuskgunAmmo;
 
@@ -87,7 +87,7 @@ function Timer() {
     currTime= Level.GRI.ElapsedTime;
     timeDiff= currTime - prevTime;
     if (kfsxri != none) {
-        kfsxri.player.accum(timeAlive, timeDiff);
+        kfsxri.summary.accum(timeAlive, timeDiff);
         if (KFPlayerReplicationInfo(PlayerReplicationInfo).ClientVeteranSkill != none) {
             kfsxri.perks.accum(GetItemName(string(KFPlayerReplicationInfo(PlayerReplicationInfo).ClientVeteranSkill)), timeDiff);
         }
@@ -102,6 +102,11 @@ function Timer() {
 function PossessedBy(Controller C) {
     super.PossessedBy(C);
     kfsxri= class'KFSXReplicationInfo'.static.findKFSXri(PlayerReplicationInfo);
+}
+
+function DisableMovement(float DisableDuration) {
+    super.DisableMovement(DisableDuration);
+    kfsxri.actions.accum(grabbedByClot, 1);
 }
 
 /**
@@ -146,8 +151,7 @@ function DeactivateSpawnProtection() {
     }
 }
 
-simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, 
-        Vector Momentum, class<DamageType> damageType, optional int HitIndex) {
+simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex) {
     local float oldHealth;
     local float oldShield;
 
@@ -157,12 +161,14 @@ simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation
     Super.TakeDamage(Damage,instigatedBy,hitlocation,momentum,damageType);
    
     if (kfsxri != none && oldHealth > 0) {
-        kfsxri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
-        kfsxri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
+        kfsxri.summary.accum(damageTaken, oldHealth - fmax(Health,0.0));
+        kfsxri.summary.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
     }
     //Does not work on TestMap
     if (ZombieHusk(InstigatedBy) != none && Momentum != vect(0,0,0) && damageType == class'HuskFireProjectile'.default.MyDamageType) {
         kfsxri.actions.accum(shotByHusk, 1);
+    } else if (damageType == class'KFBloatVomit'.default.MyDamageType) {
+        kfsxri.actions.accum(pukedOn, 1);
     }
 }
 
@@ -182,8 +188,8 @@ function TakeBileDamage() {
     healthtoGive-=5;
 
     if(kfsxri != none && oldHealth > 0) {
-        kfsxri.player.accum(damageTaken, oldHealth - fmax(Health,0.0));
-        kfsxri.player.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
+        kfsxri.summary.accum(damageTaken, oldHealth - fmax(Health,0.0));
+        kfsxri.summary.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
     }
 }
 
@@ -192,7 +198,7 @@ function ServerBuyWeapon( Class<Weapon> WClass ) {
 
     oldScore= PlayerReplicationInfo.Score;
     super.ServerBuyWeapon(WClass);
-    kfsxri.player.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
+    kfsxri.summary.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
 }
 
 function ServerBuyAmmo( Class<Ammunition> AClass, bool bOnlyClip ) {
@@ -200,7 +206,7 @@ function ServerBuyAmmo( Class<Ammunition> AClass, bool bOnlyClip ) {
 
     oldScore= PlayerReplicationInfo.Score;
     super.ServerBuyAmmo(AClass, bOnlyClip);
-    kfsxri.player.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
+    kfsxri.summary.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
 }
 
 function ServerBuyKevlar() {
@@ -208,7 +214,7 @@ function ServerBuyKevlar() {
 
     oldScore= PlayerReplicationInfo.Score;
     super.ServerBuyKevlar();
-    kfsxri.player.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
+    kfsxri.summary.accum(cashSpent, (oldScore - PlayerReplicationInfo.Score));
 }
 
 function bool GiveHealth(int HealAmount, int HealMax) {
@@ -231,4 +237,6 @@ defaultproperties {
     shotByHusk= "Shot By Husk"
     boltsRetrieved= "Bolts Retrieved"
     bladesRetrieved= "Blades Retrieved"
+    grabbedByClot= "Grabbed By Clot"
+    pukedOn= "Puked On"
 }
