@@ -1,7 +1,6 @@
 /**
- * Custom human pawn providing compatibility between ServerPerks V6.0 
- * and KFStatsX.  The code is copied  from KFSXHumanPawn and must be 
- * updated if that class changes.
+ * Custom human pawn providing compatibility between ServerPerks V6.0 and KFStatsX.  The code is copied 
+ * from KFSXHumanPawn, with slight modifications for ServerPerks and must be updated if that class changes.
  * @author etsai (Scary Ghost)
  */
 class KFSXHumanPawn_SP extends SRHumanPawn;
@@ -9,9 +8,9 @@ class KFSXHumanPawn_SP extends SRHumanPawn;
 var bool signalToss, signalFire;
 var string damageTaken, armorLost, timeAlive, cashSpent, shotByHusk;
 var string healedSelf, receivedHeal, healDartsConnected, healedTeammates;
-var string boltsRetrieved, bladesRetrieved, grabbedByClot, pukedOn;
+var string boltsRetrieved, bladesRetrieved, grabbedByClot, pukedOn, welding, healing;
 var KFSXReplicationInfo kfsxri;
-var int prevTime, prevHuskgunAmmo;
+var int prevTime, prevHuskgunAmmo, prevWeldStat, prevHealStat;
 
 /**
  * If the Pawn touched a healing dart, arrow, or blade, increment appropriate stats
@@ -73,6 +72,17 @@ simulated function Tick(float DeltaTime) {
         } else if (signalFire && Weapon != None && !Weapon.IsFiring()) {
             signalFire= false;
         }
+        /** ServerPerks specfic code */
+        if (SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements) != none) {
+            if (prevWeldStat < SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements).Rep.RWeldingPointsStat) {
+                kfsxri.summary.accum(welding, SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements).Rep.RWeldingPointsStat - prevWeldStat);
+                prevWeldStat= SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements).Rep.RWeldingPointsStat;
+            }
+            if (prevHealStat < SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements).Rep.RDamageHealedStat) {
+                kfsxri.summary.accum(healing, SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements).Rep.RDamageHealedStat - prevHealStat);
+                prevHealStat= SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements).Rep.RDamageHealedStat;
+            }
+        }
     }
     super.Tick(DeltaTime);
 }
@@ -102,6 +112,11 @@ function Timer() {
 function PossessedBy(Controller C) {
     super.PossessedBy(C);
     kfsxri= class'KFSXReplicationInfo'.static.findKFSXri(PlayerReplicationInfo);
+    /** ServerPerks specfic code */
+    if (SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements) != none) {
+        prevWeldStat= SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements).Rep.RWeldingPointsStat;
+        prevHealStat= SRStatsBase(PlayerReplicationInfo.SteamStatsAndAchievements).Rep.RDamageHealedStat;
+    }
 }
 
 function DisableMovement(float DisableDuration) {
@@ -239,4 +254,6 @@ defaultproperties {
     bladesRetrieved= "Blades Retrieved"
     grabbedByClot= "Grabbed By Clot"
     pukedOn= "Puked On"
+    welding= "Welding"
+    healing= "Healing"
 }
