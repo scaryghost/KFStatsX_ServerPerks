@@ -1,6 +1,6 @@
 /**
  * Custom human pawn providing compatibility between ServerPerks V6.0 and KFStatsX.  The code is copied 
- * from KFSXHumanPawn, with slight modifications for ServerPerks and must be updated if that class changes.
+ * from KFSXHumanPawn, with slight modifications for ServerPerks and must be updated if the KFXSHumanPawn class changes.
  * @author etsai (Scary Ghost)
  */
 class KFSXHumanPawn_SP extends SRHumanPawn;
@@ -8,7 +8,7 @@ class KFSXHumanPawn_SP extends SRHumanPawn;
 var bool signalToss, signalFire;
 var string damageTaken, armorLost, timeAlive, cashSpent, shotByHusk;
 var string healedSelf, receivedHeal, healDartsConnected, healedTeammates;
-var string boltsRetrieved, bladesRetrieved, grabbedByClot, pukedOn, welding, healing;
+var string boltsRetrieved, bladesRetrieved, pukedOn, welding, healing;
 var KFSXReplicationInfo kfsxri;
 var int prevTime, prevHuskgunAmmo, prevWeldStat, prevHealStat;
 
@@ -119,19 +119,15 @@ function PossessedBy(Controller C) {
     }
 }
 
-function DisableMovement(float DisableDuration) {
-    super.DisableMovement(DisableDuration);
-    kfsxri.actions.accum(grabbedByClot, 1);
-}
-
 /**
  * Called whenever a weapon is fired.  
- * This function tracks usage for every weapon except the Welder and Huskgun
+ * This function tracks usage for every weapon except the Welder
  */
 function DeactivateSpawnProtection() {
     local int mode;
     local string itemName;
-    local float load;
+    local float load, healAmount;
+
     super.DeactivateSpawnProtection();
     
     if (prevHuskgunAmmo != 0 && Huskgun(Weapon) != none) {
@@ -144,10 +140,19 @@ function DeactivateSpawnProtection() {
             mode= 1;
 
         if (Syringe(Weapon) != none) {
-            if (mode ==1)
+            if (mode == 1) {
                 itemName= healedSelf;
-            else
+                healAmount= Syringe(Weapon).HealBoostAmount * KFPlayerReplicationInfo(PlayerReplicationInfo).ClientVeteranSkill.static.
+                        GetHealPotency(KFPlayerReplicationInfo(PlayerReplicationInfo));
+                if ((Health + healthToGive + healAmount) > HealthMax ) {
+                    healAmount= HealthMax - (Health + healthToGive);
+                }
+                if (healAmount > 0) {
+                    kfsxri.summary.accum(healing, healAmount);
+                }
+            } else {
                 itemName= healedTeammates;
+            }
             kfsxri.actions.accum(itemName,1);
             return;
         }
@@ -173,17 +178,18 @@ simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation
     oldHealth= Health;
     oldShield= ShieldStrength;
 
+    //Does not work on TestMap
+    if (ZombieHusk(InstigatedBy) != none && Momentum != vect(0,0,0) && damageType == class'HuskFireProjectile'.default.MyDamageType) {
+        kfsxri.actions.accum(shotByHusk, 1);
+    } else if (damageType == class'KFBloatVomit'.default.MyDamageType && BileCount != 7) {
+        kfsxri.actions.accum(pukedOn, 1);
+    }
+
     Super.TakeDamage(Damage,instigatedBy,hitlocation,momentum,damageType);
    
     if (kfsxri != none && oldHealth > 0) {
         kfsxri.summary.accum(damageTaken, oldHealth - fmax(Health,0.0));
         kfsxri.summary.accum(armorLost, oldShield - fmax(ShieldStrength,0.0));
-    }
-    //Does not work on TestMap
-    if (ZombieHusk(InstigatedBy) != none && Momentum != vect(0,0,0) && damageType == class'HuskFireProjectile'.default.MyDamageType) {
-        kfsxri.actions.accum(shotByHusk, 1);
-    } else if (damageType == class'KFBloatVomit'.default.MyDamageType) {
-        kfsxri.actions.accum(pukedOn, 1);
     }
 }
 
@@ -252,7 +258,6 @@ defaultproperties {
     shotByHusk= "Shot By Husk"
     boltsRetrieved= "Bolts Retrieved"
     bladesRetrieved= "Blades Retrieved"
-    grabbedByClot= "Grabbed By Clot"
     pukedOn= "Puked On"
     welding= "Welding"
     healing= "Healing"
