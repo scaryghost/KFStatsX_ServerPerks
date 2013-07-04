@@ -2,7 +2,7 @@
 Scary Ghost
 
 ## Version
-2.0
+2.0.1
 
 ## About
 Enables compatibility between ServerPerksV6 and KFStatsX
